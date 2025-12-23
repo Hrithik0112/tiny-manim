@@ -195,15 +195,16 @@ class MObject(ABC):
         Apply the object's transform (position, scale, rotation) to a Cairo context.
         
         This is called before render() to set up the coordinate system.
+        The renderer has already set up a y-up coordinate system, so we don't flip y here.
         """
         ctx.save()
         
-        # Translate to position
-        ctx.translate(self.position[0], -self.position[1])  # Flip y-axis
+        # Translate to position (y is already flipped by renderer)
+        ctx.translate(self.position[0], self.position[1])
         
         # Rotate
         if self.rotation != 0:
-            ctx.rotate(-self.rotation)  # Negative for counter-clockwise
+            ctx.rotate(self.rotation)  # Positive for counter-clockwise in y-up system
         
         # Scale
         if self.scale_factor != 1.0:

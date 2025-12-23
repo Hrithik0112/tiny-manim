@@ -10,8 +10,9 @@ from abc import ABC, abstractmethod
 from mini_manim.core.mobject import MObject
 from mini_manim.core.animation import Animation, AnimationBuilder
 from mini_manim.core.timeline import Timeline
+from mini_manim.core.renderer import CairoRenderer
 from mini_manim.easing import linear
-from mini_manim.constants import DEFAULT_FPS
+from mini_manim.constants import DEFAULT_FPS, DEFAULT_WIDTH, DEFAULT_HEIGHT
 
 
 class Scene(ABC):
@@ -32,7 +33,7 @@ class Scene(ABC):
         """Initialize a scene."""
         self.mobjects: List[MObject] = []
         self.timeline = Timeline(fps=DEFAULT_FPS)
-        self._renderer = None  # Will be set by renderer
+        self._renderer: CairoRenderer | None = None  # Will be set when rendering
     
     def add(self, *mobjects: MObject) -> None:
         """
@@ -114,12 +115,9 @@ class Scene(ABC):
         """
         pass
     
-    def render(self, output_path: str, fps: int = DEFAULT_FPS, width: int = 1920, height: int = 1080) -> None:
+    def render(self, output_path: str, fps: int = DEFAULT_FPS, width: int = DEFAULT_WIDTH, height: int = DEFAULT_HEIGHT) -> None:
         """
         Render the scene to a video file.
-        
-        This method will be implemented once we have the renderer.
-        For now, it's a placeholder.
         
         Args:
             output_path: Path to output video file.
@@ -127,8 +125,12 @@ class Scene(ABC):
             width: Video width in pixels.
             height: Video height in pixels.
         """
-        # This will be implemented in the next step with the renderer
-        raise NotImplementedError("Renderer not yet implemented")
+        # Create renderer
+        renderer = CairoRenderer(width=width, height=height)
+        
+        # Render frames (will be piped to FFmpeg in next step)
+        # For now, this is a placeholder - FFmpeg integration comes next
+        raise NotImplementedError("FFmpeg video export not yet implemented - use renderer.render_to_file() for PNG frames")
     
     def get_mobjects(self) -> List[MObject]:
         """

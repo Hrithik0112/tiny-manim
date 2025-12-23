@@ -174,8 +174,8 @@ class Line(MObject):
         We draw in local coordinates.
         """
         # Draw line from start to end
-        ctx.move_to(self.start[0], -self.start[1])  # Flip y-axis
-        ctx.line_to(self.end[0], -self.end[1])  # Flip y-axis
+        ctx.move_to(self.start[0], self.start[1])
+        ctx.line_to(self.end[0], self.end[1])
         
         # Apply stroke (lines don't have fill)
         if self.stroke_opacity > 0:
@@ -216,8 +216,8 @@ class Arrow(Line):
         Render the arrow (line + arrowhead) to a Cairo context.
         """
         # Draw the main line
-        ctx.move_to(self.start[0], -self.start[1])
-        ctx.line_to(self.end[0], -self.end[1])
+        ctx.move_to(self.start[0], self.start[1])
+        ctx.line_to(self.end[0], self.end[1])
         
         # Calculate arrowhead
         direction = self.end - self.start
@@ -234,10 +234,10 @@ class Arrow(Line):
             tip_right = tip_base - perp * self.tip_width
             
             # Draw arrowhead
-            ctx.move_to(self.end[0], -self.end[1])
-            ctx.line_to(tip_left[0], -tip_left[1])
-            ctx.move_to(self.end[0], -self.end[1])
-            ctx.line_to(tip_right[0], -tip_right[1])
+            ctx.move_to(self.end[0], self.end[1])
+            ctx.line_to(tip_left[0], tip_left[1])
+            ctx.move_to(self.end[0], self.end[1])
+            ctx.line_to(tip_right[0], tip_right[1])
         
         # Apply stroke
         if self.stroke_opacity > 0:
