@@ -6,6 +6,7 @@ Handles coordinate system transformation and frame rendering.
 
 import cairo
 import io
+import subprocess
 from typing import List, Generator
 
 from mini_manim.core.mobject import MObject
@@ -199,4 +200,75 @@ class CairoRenderer:
             frame_path = os.path.join(output_path, f"frame_{frame_num:04d}.png")
             with open(frame_path, "wb") as f:
                 f.write(frame_bytes)
+    
+    def render_to_video(
+        self,
+        scene: Scene,
+        output_path: str,
+        fps: int = DEFAULT_FPS,
+        background_color: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    ) -> None:
+        """
+        Render a scene directly to an MP4 video file using FFmpeg.
+        
+        Frames are piped directly to FFmpeg without saving intermediate PNG files.
+        
+        Args:
+            scene: Scene to render.
+            output_path: Path to output MP4 file.
+            fps: Frames per second.
+            background_color: Background color (RGB, 0-1 range).
+            
+        Raises:
+            FileNotFoundError: If FFmpeg is not found in PATH.
+            subprocess.CalledProcessError: If FFmpeg fails.
+        """
+        # FFmpeg command to pipe PNG frames and encode to MP4
+        cmd = [
+            'ffmpeg',
+            '-y',  # Overwrite output file
+            '-f', 'image2pipe',  # Input format: pipe
+            '-vcodec', 'png',  # Input codec
+            '-r', str(fps),  # Frame rate
+            '-i', '-',  # Read from stdin
+            '-c:v', 'libx264',  # Video codec
+            '-pix_fmt', 'yuv420p',  # Pixel format (compatible with most players)
+            '-crf', '23',  # Quality (18-28, lower = better quality)
+            output_path
+        ]
+        
+        try:
+            # Start FFmpeg process
+            proc = subprocess.Popen(
+                cmd,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            
+            # Render frames and pipe to FFmpeg
+            frame_count = 0
+            for frame_bytes in self.render_scene(scene, fps, background_color):
+                proc.stdin.write(frame_bytes)
+                frame_count += 1
+            
+            # Close stdin to signal end of input
+            proc.stdin.close()
+            
+            # Wait for FFmpeg to finish
+            stdout, stderr = proc.communicate()
+            
+            if proc.returncode != 0:
+                error_msg = stderr.decode('utf-8', errors='ignore')
+                raise subprocess.CalledProcessError(
+                    proc.returncode,
+                    cmd,
+                    f"FFmpeg failed: {error_msg}"
+                )
+            
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                "FFmpeg not found. Please install FFmpeg and ensure it's in your PATH.\n"
+                "Visit https://ffmpeg.org/download.html for installation instructions."
+            )
 

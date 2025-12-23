@@ -115,22 +115,29 @@ class Scene(ABC):
         """
         pass
     
-    def render(self, output_path: str, fps: int = DEFAULT_FPS, width: int = DEFAULT_WIDTH, height: int = DEFAULT_HEIGHT) -> None:
+    def render(
+        self,
+        output_path: str,
+        fps: int = DEFAULT_FPS,
+        width: int = DEFAULT_WIDTH,
+        height: int = DEFAULT_HEIGHT,
+        background_color: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    ) -> None:
         """
         Render the scene to a video file.
         
         Args:
-            output_path: Path to output video file.
+            output_path: Path to output video file (MP4).
             fps: Frames per second.
             width: Video width in pixels.
             height: Video height in pixels.
+            background_color: Background color (RGB, 0-1 range).
         """
         # Create renderer
         renderer = CairoRenderer(width=width, height=height)
         
-        # Render frames (will be piped to FFmpeg in next step)
-        # For now, this is a placeholder - FFmpeg integration comes next
-        raise NotImplementedError("FFmpeg video export not yet implemented - use renderer.render_to_file() for PNG frames")
+        # Render directly to video using FFmpeg
+        renderer.render_to_video(self, output_path, fps, background_color)
     
     def get_mobjects(self) -> List[MObject]:
         """
