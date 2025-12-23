@@ -7,6 +7,7 @@ from mini_manim.mobjects.shapes import (
     Line,
     Arrow,
 )
+from mini_manim.mobjects.text import Text
 
 __all__ = [
     "Circle",
@@ -14,5 +15,6 @@ __all__ = [
     "Square",
     "Line",
     "Arrow",
+    "Text",
 ]
 
