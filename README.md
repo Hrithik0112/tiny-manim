@@ -27,15 +27,28 @@ Install FFmpeg:
 
 ### Install Mini-Manim
 
-Using `uv` (recommended):
+**Option 1: Using a virtual environment (recommended)**
+
+```bash
+# Create virtual environment
+python3 -m venv venv
+
+# Activate it
+source venv/bin/activate  # On macOS/Linux
+# or
+venv\Scripts\activate  # On Windows
+
+# Install Mini-Manim
+pip install -e .
+```
+
+**Option 2: Using `uv` (if installed)**
+
 ```bash
 uv pip install -e .
 ```
 
-Or using `pip`:
-```bash
-pip install -e .
-```
+**Note:** After installation, make sure to activate your virtual environment before using the `mini-manim` command.
 
 ## Quick Start
 

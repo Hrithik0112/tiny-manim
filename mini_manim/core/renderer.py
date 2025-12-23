@@ -7,11 +7,13 @@ Handles coordinate system transformation and frame rendering.
 import cairo
 import io
 import subprocess
-from typing import List, Generator
+from typing import List, Generator, TYPE_CHECKING
 
 from mini_manim.core.mobject import MObject
-from mini_manim.core.scene import Scene
 from mini_manim.core.timeline import Timeline
+
+if TYPE_CHECKING:
+    from mini_manim.core.scene import Scene
 from mini_manim.constants import (
     DEFAULT_WIDTH,
     DEFAULT_HEIGHT,
@@ -130,7 +132,7 @@ class CairoRenderer:
     
     def render_scene(
         self,
-        scene: Scene,
+        scene: "Scene",
         fps: int = DEFAULT_FPS,
         background_color: tuple[float, float, float] = (0.0, 0.0, 0.0),
     ) -> Generator[bytes, None, None]:
@@ -176,7 +178,7 @@ class CairoRenderer:
     
     def render_to_file(
         self,
-        scene: Scene,
+        scene: "Scene",
         output_path: str,
         fps: int = DEFAULT_FPS,
         background_color: tuple[float, float, float] = (0.0, 0.0, 0.0),
@@ -203,7 +205,7 @@ class CairoRenderer:
     
     def render_to_video(
         self,
-        scene: Scene,
+        scene: "Scene",
         output_path: str,
         fps: int = DEFAULT_FPS,
         background_color: tuple[float, float, float] = (0.0, 0.0, 0.0),
@@ -230,6 +232,7 @@ class CairoRenderer:
             '-f', 'image2pipe',  # Input format: pipe
             '-vcodec', 'png',  # Input codec
             '-r', str(fps),  # Frame rate
+            '-s', f'{self.width}x{self.height}',  # Frame size
             '-i', '-',  # Read from stdin
             '-c:v', 'libx264',  # Video codec
             '-pix_fmt', 'yuv420p',  # Pixel format (compatible with most players)
@@ -243,17 +246,26 @@ class CairoRenderer:
                 cmd,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                bufsize=0  # Unbuffered
             )
             
             # Render frames and pipe to FFmpeg
             frame_count = 0
-            for frame_bytes in self.render_scene(scene, fps, background_color):
-                proc.stdin.write(frame_bytes)
-                frame_count += 1
-            
-            # Close stdin to signal end of input
-            proc.stdin.close()
+            try:
+                for frame_bytes in self.render_scene(scene, fps, background_color):
+                    if proc.stdin is None:
+                        break
+                    proc.stdin.write(frame_bytes)
+                    proc.stdin.flush()  # Ensure frame is written
+                    frame_count += 1
+            except BrokenPipeError:
+                # FFmpeg closed the pipe early, check for errors
+                pass
+            finally:
+                # Close stdin to signal end of input
+                if proc.stdin:
+                    proc.stdin.close()
             
             # Wait for FFmpeg to finish
             stdout, stderr = proc.communicate()
